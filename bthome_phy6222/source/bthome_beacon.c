@@ -99,7 +99,19 @@ uint8_t adv_set_data(void * pd) {
 	p->c_id = BtHomeID_count32;
 	p->counter = adv_wrk.rds_count;
 #endif
-	return sizeof(adv_bthome_data2_t);
+	p->m_id = BtHomeID_motion;
+	p->motion = measured_data.motion?1:0; // x mV
+	if (measured_data.motion) 
+	{
+		if(--measured_data.motion==0)
+		{
+//			cfg.advertising_interval *= 10;
+//			adv_wrk.adv_reload_count =1;
+		}
+		dbg_printf("motion: %d\n",measured_data.motion);
+	}
+
+return sizeof(adv_bthome_data2_t);
 }
 
 #endif
@@ -126,11 +138,22 @@ uint8_t adv_set_event(void * ped) {
 
 uint8_t bthome_data_beacon(void * padbuf) {
 #if (DEV_SERVICES & SERVICE_FINDMY)
-	if (adv_wrk.adv_event == 0 && (cfg.flg & FLG_FINDMY)) {
-		gapRole_AdvEventType = LL_ADV_NONCONNECTABLE_UNDIRECTED_EVT;
-		return  findmy_beacon(padbuf);
-	} else
-		gapRole_AdvEventType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
+static char counter=0;
+gapRole_AdvEventType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
+counter++;
+dbg_printf("iter %d\n",counter);	
+if (counter && 
+	(adv_wrk.adv_event == 0) 
+	&& (cfg.flg & FLG_FINDMY) 
+	/*&& (clkt.utc_time_sec > *(uint32_t*)(&identity_findmy_key[32]))*/
+	) {
+		switch (counter)
+		{
+			case 1:return  google_findmy_beacon(padbuf);
+			case 2:return  apple_findmy_beacon(padbuf);
+		}
+		counter=0;	
+	} 
 #endif
 	padv_bthome_noencrypt_t p = (padv_bthome_noencrypt_t)padbuf;
 	p->flag[0] = 0x02; // size

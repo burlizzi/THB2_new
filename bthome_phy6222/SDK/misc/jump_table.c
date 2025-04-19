@@ -30,7 +30,7 @@ void (*trap_c_callback)(void);
 extern void log_printf(const char* format, ...);
 void _hard_fault(uint32_t* arg)
 {
-#if DEBUG_INFO == 0
+#if DEBUG_INFO == 0111
 	(void)arg;
 #else
     uint32_t* stk = (uint32_t*)((uint32_t)arg);

@@ -46,6 +46,10 @@
 #include "lcd.h"
 #include "logger.h"
 #include "trigger.h"
+#include "fastpairservice.h"
+#include "ringservice.h"
+#include "dev_i2c.h"
+
 /*********************************************************************
  * MACROS
  */
@@ -306,6 +310,7 @@ static void adv_measure(void) {
 #endif
 		if(adv_wrk.adv_reload_count) {
 			if(--adv_wrk.adv_reload_count == 0) {
+				dbg_printf("send\n");
 				// восстановление/переключение типа и интервалов рекламы
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
 				if (wrk.boot_flg == BOOT_FLG_OTA) {
@@ -370,12 +375,31 @@ static void adv_measure(void) {
 	}
 }
 
+static void posedge_int_wakeup_motion(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
+{
+	//dbg_printf("mosso\n");
+	osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPUT_EVT);
+}
+
+static void negedge_int_wakeup_motion(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
+{
+	//dbg_printf("/mosso\n");
+	measured_data.motion = 5; // move
+	osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPUT_EVT);
+	//adv_wrk.adv_event = 1;
+	//adv_wrk.adv_reload_count = 1;
+	//cfg.advertising_interval /= 10;
+	//set_new_adv_interval(cfg.advertising_interval * 10);
+}
+
+
 #if (DEV_SERVICES & (SERVICE_KEY | SERVICE_RDS | SERVICE_BUTTON))
 /*********************************************************************
  * LED and Key
  */
 static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 {
+	dbg_printf("key\n");
 	(void) pin;
 	if(type == POSEDGE)
 	{
@@ -526,6 +550,49 @@ static gapBondCBs_t simpleBLEPeripheral_BondMgrCBs =
 	NULL					  // Pairing / Bonding state Callback (not used by application)
 };
 #endif
+
+
+
+dev_i2c_t i2c_dev11 = {
+	.pi2cdev = AP_I2C0,
+	.scl = I2C_SCL,
+	.sda = I2C_SDA,
+	.speed = I2C_100KHZ,
+	.i2c_num = 0
+};
+
+
+
+void i2c_write_byte( uint8_t data, uint8_t reg)
+{
+	
+	if(send_i2c_wcmd(&i2c_dev11, 0x19, reg | (data << 8)))
+		log_printf("I2C: error\n");
+}
+
+void in_init()
+{
+	
+	i2c_dev11.speed = I2C_100KHZ;
+	hal_gpio_write(GPIO_P01, 1);
+	init_i2c(&i2c_dev11);
+	uint8_t buf[6]={0x0f};
+	if (read_i2c_bytes(&i2c_dev11, 0x19, 0xf,buf, 1))
+		log_printf("I2C 0xf: error\n");
+	i2c_write_byte(0x1f,8);
+	i2c_write_byte(0x20,0x27);
+	i2c_write_byte(0x23,0x88);
+	i2c_write_byte(0x21,0x31);
+	i2c_write_byte(0x22,0x40);
+	i2c_write_byte(0x25,0);
+	i2c_write_byte(0x24,0);
+	i2c_write_byte(0x30,0x2a);
+	i2c_write_byte(0x32,0x28);
+	i2c_write_byte(0x33,0);
+	i2c_write_byte(0x58,2);
+
+}
+
 /*********************************************************************
  * PUBLIC FUNCTIONS
  */
@@ -575,9 +642,9 @@ void SimpleBLEPeripheral_Init( uint8_t task_id )
 		gatrole_advert_enable(FALSE);
 #if (DEV_SERVICES & SERVICE_FINDMY)
 		if (cfg.flg & FLG_FINDMY) {
-			extern uint8_t findmy_beacon(void * padbuf);
-			gapRole_AdvEventType = LL_ADV_NONCONNECTABLE_UNDIRECTED_EVT;
-			gapRole_AdvertDataLen = findmy_beacon((void *)gapRole_AdvertData);
+			extern uint8_t google_findmy_beacon(void * padbuf);
+			gapRole_AdvEventType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
+			gapRole_AdvertDataLen = google_findmy_beacon((void *)gapRole_AdvertData);
 		} else {
 			gapRole_AdvEventType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
 		}
@@ -629,6 +696,9 @@ void SimpleBLEPeripheral_Init( uint8_t task_id )
 	GATTServApp_AddService( GATT_ALL_SERVICES );		//	GATT attributes
 	DevInfo_AddService();								//	Device Information Service
 	Batt_AddService();
+	FastPair_AddService();
+	Ring_AddService();
+	
 #if (DEV_SERVICES & SERVICE_THS)
 	TH_AddService();
 #endif
@@ -671,6 +741,9 @@ void SimpleBLEPeripheral_Init( uint8_t task_id )
 #if	(DEV_SERVICES & (SERVICE_RDS | SERVICE_BUTTON))
 	adv_wrk.rds_timer_tik = clkt.utc_time_tik - (RDS_EVENT_START_SEC << 15);
 #endif
+	in_init();
+	hal_gpioin_register(GPIO_P00, posedge_int_wakeup_motion, negedge_int_wakeup_motion);
+	//deinit_i2c(&i2c_dev11);
 
 	LOG("=====SimpleBLEPeripheral_Init Done=======\n");
 }
@@ -790,7 +863,16 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 	}
 #if (DEV_SERVICES & (SERVICE_RDS | SERVICE_BUTTON))
 	if(events & PIN_INPUT_EVT) {
+		dbg_printf("PIN_INPUT_EVT %d\n",hal_gpio_read(GPIO_P00));
 		int ev = 0;
+		if(hal_gpio_read(GPIO_P00) == 1) {
+			if(!measured_data.flg.pin_input) {
+				adv_wrk.rds_count++;
+				measured_data.button = 1; // press
+				ev = 1;
+			}
+			measured_data.flg.pin_input = 1;
+		} else 
 #if (DEV_SERVICES & SERVICE_BUTTON)
 		if(hal_gpio_read(GPIO_KEY) == KEY_PRESSED) {
 			if(!measured_data.flg.pin_input) {
@@ -912,6 +994,8 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
  */
  static void peripheralStateNotificationCB( gaprole_States_t newState )
 {
+	dbg_printf("GAP:%d\n",newState);
+
 	switch ( newState )
 	{
 		case GAPROLE_STARTED:
@@ -935,8 +1019,10 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 			adv_wrk.adv_reload_count = 1;
 #if (DEV_SERVICES & SERVICE_THS)
 			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, adv_wrk.measure_interval_ms); // 10000 ms
+			dbg_printf("adv_wrk.measure_interval_ms %d\n",adv_wrk.measure_interval_ms);	
 #else
 			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, cfg.batt_interval*1000);
+			dbg_printf("cfg.batt_interval %d\n",cfg.batt_interval);	
 #endif
 			HCI_PPLUS_ConnEventDoneNoticeCmd(simpleBLEPeripheral_TaskID, 0);
 			LOG("Gaprole_Connected\n");
@@ -977,7 +1063,7 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 		break;
 
 		case GAPROLE_ERROR:
-			LOG("Gaprole error!\n");
+			dbg_printf("Gaprole error!\n");
 		break;
 
 		default:

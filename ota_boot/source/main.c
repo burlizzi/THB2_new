@@ -106,6 +106,7 @@ void copy_app_code(void) {
 	uint32_t dfaddr = 0;
 	uint32_t wfaddr = FADDR_BOOT_ROM_INFO + MAX_FLASH_SIZE;
 	uint32_t count;
+	
     __disable_irq();
     //*(volatile uint32_t *) 0x1fff0898 = MAX_FLASH_SIZE*2;
 	spif_read(rfaddr, (uint8_t*)&rfaddr, 4);

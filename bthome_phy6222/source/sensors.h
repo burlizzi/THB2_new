@@ -228,6 +228,7 @@ typedef struct _measured_data_t {
 	int16_t		none2;
 	uint16_t	battery_mv; // mV
 	uint8_t		battery; // 0..100 %
+	uint8_t		motion; // 0..100 %
 	measured_flg_t flg;
 } measured_data_t;
 

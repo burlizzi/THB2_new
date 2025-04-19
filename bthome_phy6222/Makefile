@@ -33,6 +33,10 @@ SRC_PRJ += lcd_th04.c
 SRC_PRJ += ble_ota.c
 SRC_PRJ += logger.c
 SRC_PRJ += buzzer.c
+SRC_PRJ += uECC.c
+SRC_PRJ += aes.c
+SRC_PRJ += fastpairservice.c
+SRC_PRJ += ringservice.c
 
 INCLUDES = -I$(SRC_PATH)
 
@@ -46,6 +50,10 @@ DEFINES += -DDEBUG_INFO=0
 DEFINES += -DMTU_SIZE=240
 DEFINES += -DMAX_NUM_LL_CONN=1
 DEFINES += -DDEF_GAPBOND_MGR_ENABLE=0
+
+DEFINES += -DuECC_ENABLE_VLI_API=1
+DEFINES += -DuECC_WORD_SIZE=4
+
 
 #Debug:
 DEFINES += -DTEST_RTC_DELTA=1
@@ -284,7 +292,7 @@ all: directory $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME
 	@$(OBJCOPY) -O ihex $^ $@
 
 %.bin: %.hex
-	@echo Make: $@
+	@echo Make: $@ $(OBJ_DIR)/$(PROJECT_NAME).hex
 	@$(PYTHON) ./phy62x2_ota.py $(ADD_OPT) $(OBJ_DIR)/$(PROJECT_NAME).hex
 
 %.asm: %.elf

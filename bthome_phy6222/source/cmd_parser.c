@@ -209,47 +209,49 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 #endif
 #if (DEV_SERVICES & SERVICE_FINDMY)
 		} else if (cmd == CMD_ID_FDMKEY) { // Get/set findmy key
-			if (len == sizeof(findmy_key)/2 + 2) {
+			dbg_printf("apple_findmy_key %d\n",len);
+			if (len == sizeof(apple_findmy_key)/2 + 2) {
+				dbg_printf("ibuf[1] %d\n",ibuf[1]);
 				if(ibuf[1] == 3) {
-					memcpy(findmy_key_new, &ibuf[2], SIZE_FINDMY_KEY/2);
-					memcpy(&obuf[2], findmy_key_new, SIZE_FINDMY_KEY/2);
+					memcpy(apple_findmy_key_new, &ibuf[2], SIZE_APPLE_FINDMY_KEY/2);
+					memcpy(&obuf[2], apple_findmy_key_new, SIZE_APPLE_FINDMY_KEY/2);
 					obuf[1] = 3;
-					olen = SIZE_FINDMY_KEY/2 + 2;
+					olen = SIZE_APPLE_FINDMY_KEY/2 + 2;
 				} else if(ibuf[1] == 4) {
-					memcpy(&findmy_key_new[SIZE_FINDMY_KEY/2], &ibuf[2], SIZE_FINDMY_KEY/2);
-					memcpy(&obuf[2], &findmy_key_new[SIZE_FINDMY_KEY/2], SIZE_FINDMY_KEY/2);
-					if(memcmp(findmy_key, findmy_key_new, SIZE_FINDMY_KEY)) {
-						memcpy(findmy_key, findmy_key_new, SIZE_FINDMY_KEY);
-						flash_write_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key));
-						findmy_key_new[0] |= 0xC0;
-						swap_mac(findmy_key_new, findmy_key_new);
-						if(memcmp(ownPublicAddr, findmy_key_new, MAC_LEN)) {
-							memcpy(ownPublicAddr, findmy_key_new, MAC_LEN);
+					memcpy(&apple_findmy_key_new[SIZE_APPLE_FINDMY_KEY/2], &ibuf[2], SIZE_APPLE_FINDMY_KEY/2);
+					memcpy(&obuf[2], &apple_findmy_key_new[SIZE_APPLE_FINDMY_KEY/2], SIZE_APPLE_FINDMY_KEY/2);
+					if(memcmp(apple_findmy_key, apple_findmy_key_new, SIZE_APPLE_FINDMY_KEY)) {
+						memcpy(apple_findmy_key, apple_findmy_key_new, SIZE_APPLE_FINDMY_KEY);
+						flash_write_cfg(apple_findmy_key, EEP_ID_FDK, sizeof(apple_findmy_key));
+						apple_findmy_key_new[0] |= 0xC0;
+						swap_mac(apple_findmy_key_new, apple_findmy_key_new);
+						if(memcmp(ownPublicAddr, apple_findmy_key_new, MAC_LEN)) {
+							memcpy(ownPublicAddr, apple_findmy_key_new, MAC_LEN);
 							flash_write_cfg(ownPublicAddr, EEP_ID_MAC, MAC_LEN);
 							wrk.reboot |= 1;
 						}
 					}
 					obuf[1] = 4;
-					olen = SIZE_FINDMY_KEY/2 + 2;
+					olen = SIZE_APPLE_FINDMY_KEY/2 + 2;
 				} else {
 					obuf[1] = 0xff;
 					olen = 2;
 				}
 			} else if (len == 2) {
 				if(ibuf[1] == 1) {
-					if (flash_read_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key)) == sizeof(findmy_key)) {
-						memcpy(&obuf[2], findmy_key, SIZE_FINDMY_KEY/2);
+					if (flash_read_cfg(apple_findmy_key, EEP_ID_FDK, sizeof(apple_findmy_key)) == sizeof(apple_findmy_key)) {
+						memcpy(&obuf[2], apple_findmy_key, SIZE_APPLE_FINDMY_KEY/2);
 						obuf[1] = 1;
-						olen = SIZE_FINDMY_KEY/2 + 2;
+						olen = SIZE_APPLE_FINDMY_KEY/2 + 2;
 					} else { // No findmy key in EEP!
 						obuf[1] = 0xfe;
 						olen = 2;
 					}
 				} else if(ibuf[1] == 2) {
-					if (flash_read_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key)) == sizeof(findmy_key)) {
-						memcpy(&obuf[2], &findmy_key[SIZE_FINDMY_KEY/2], SIZE_FINDMY_KEY/2);
+					if (flash_read_cfg(apple_findmy_key, EEP_ID_FDK, sizeof(apple_findmy_key)) == sizeof(apple_findmy_key)) {
+						memcpy(&obuf[2], &apple_findmy_key[SIZE_APPLE_FINDMY_KEY/2], SIZE_APPLE_FINDMY_KEY/2);
 						obuf[1] = 2;
-						olen = SIZE_FINDMY_KEY/2 + 2;
+						olen = SIZE_APPLE_FINDMY_KEY/2 + 2;
 					} else { // No findmy key in EEP!
 						obuf[1] = 0xfe;
 						olen = 2;
@@ -262,11 +264,126 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 				obuf[1] = 0xff;
 				olen = 2;
 			}
+		} else if (cmd == CMD_ID_GFMKEY) { // Get/set findmy key
+			dbg_printf("CMD_ID_GFMKEY %d\n",len);
+			if (len == sizeof(google_findmy_key)/2 + 2) {
+				dbg_printf("ibuf[1] %d\n",ibuf[1]);
+				if(ibuf[1] == 3) {
+					memcpy(google_findmy_key_new, &ibuf[2], SIZE_GOOGLE_FINDMY_KEY/2);
+					memcpy(&obuf[2], google_findmy_key_new, SIZE_GOOGLE_FINDMY_KEY/2);
+					obuf[1] = 3;
+					olen = SIZE_GOOGLE_FINDMY_KEY/2 + 2;
+				} else if(ibuf[1] == 4) {
+					memcpy(&google_findmy_key_new[SIZE_GOOGLE_FINDMY_KEY/2], &ibuf[2], SIZE_GOOGLE_FINDMY_KEY/2);
+					memcpy(&obuf[2], &google_findmy_key_new[SIZE_GOOGLE_FINDMY_KEY/2], SIZE_GOOGLE_FINDMY_KEY/2);
+					if(memcmp(google_findmy_key, google_findmy_key_new, SIZE_GOOGLE_FINDMY_KEY)) {
+						memcpy(google_findmy_key, google_findmy_key_new, SIZE_GOOGLE_FINDMY_KEY);
+						flash_write_cfg(google_findmy_key, EEP_ID_GFK, sizeof(google_findmy_key));
+						google_findmy_key_new[0] |= 0xC0;
+						swap_mac(google_findmy_key_new, google_findmy_key_new);
+						if(memcmp(ownPublicAddr, google_findmy_key_new, MAC_LEN)) {
+							memcpy(ownPublicAddr, google_findmy_key_new, MAC_LEN);
+							flash_write_cfg(ownPublicAddr, EEP_ID_MAC, MAC_LEN);
+							wrk.reboot |= 1;
+						}
+					}
+					obuf[1] = 4;
+					olen = SIZE_GOOGLE_FINDMY_KEY/2 + 2;
+				} else {
+					obuf[1] = 0xff;
+					olen = 2;
+				}
+			} else if (len == 2) {
+				if(ibuf[1] == 1) {
+					if (flash_read_cfg(google_findmy_key, EEP_ID_GFK, sizeof(google_findmy_key)) == sizeof(google_findmy_key)) {
+						memcpy(&obuf[2], google_findmy_key, SIZE_GOOGLE_FINDMY_KEY/2);
+						obuf[1] = 1;
+						olen = SIZE_GOOGLE_FINDMY_KEY/2 + 2;
+					} else { // No findmy key in EEP!
+						obuf[1] = 0xfe;
+						olen = 2;
+					}
+				} else if(ibuf[1] == 2) {
+					if (flash_read_cfg(google_findmy_key, EEP_ID_GFK, sizeof(google_findmy_key)) == sizeof(google_findmy_key)) {
+						memcpy(&obuf[2], &google_findmy_key[SIZE_GOOGLE_FINDMY_KEY/2], SIZE_GOOGLE_FINDMY_KEY/2);
+						obuf[1] = 2;
+						olen = SIZE_GOOGLE_FINDMY_KEY/2 + 2;
+					} else { // No findmy key in EEP!
+						obuf[1] = 0xfe;
+						olen = 2;
+					}
+				} else {
+					obuf[1] = 0xff;
+					olen = 2;
+				}
+			} else {
+				obuf[1] = 0xff;
+				olen = 2;
+			}
+		} else if (cmd == CMD_ID_IFMKEY) { // Get/set findmy key
+			if (len == sizeof(identity_findmy_key)/2 + 2) {
+				if(ibuf[1] == 3) {
+					memcpy(identity_findmy_key_new, &ibuf[2], SIZE_IDENTITY_FINDMY_KEY/2);
+					memcpy(&obuf[2], identity_findmy_key_new, SIZE_IDENTITY_FINDMY_KEY/2);
+					obuf[1] = 3;
+					olen = SIZE_IDENTITY_FINDMY_KEY/2 + 2;
+				} else if(ibuf[1] == 4) {
+					memcpy(&identity_findmy_key_new[SIZE_IDENTITY_FINDMY_KEY/2], &ibuf[2], SIZE_IDENTITY_FINDMY_KEY/2);
+					memcpy(&obuf[2], &identity_findmy_key_new[SIZE_IDENTITY_FINDMY_KEY/2], SIZE_IDENTITY_FINDMY_KEY/2);
+					if(memcmp(identity_findmy_key, identity_findmy_key_new, SIZE_IDENTITY_FINDMY_KEY)) {
+						memcpy(identity_findmy_key, identity_findmy_key_new, SIZE_IDENTITY_FINDMY_KEY);
+						flash_write_cfg(identity_findmy_key, EEP_ID_IFK, sizeof(identity_findmy_key));
+						identity_findmy_key_new[0] |= 0xC0;
+						swap_mac(identity_findmy_key_new, identity_findmy_key_new);
+						if(memcmp(ownPublicAddr, identity_findmy_key_new, MAC_LEN)) {
+							memcpy(ownPublicAddr, identity_findmy_key_new, MAC_LEN);
+							flash_write_cfg(ownPublicAddr, EEP_ID_MAC, MAC_LEN);
+							wrk.reboot |= 1;
+						}
+					}
+					obuf[1] = 4;
+					olen = SIZE_IDENTITY_FINDMY_KEY/2 + 2;
+				} else {
+					obuf[1] = 0xff;
+					olen = 2;
+				}
+			} else if (len == 2) {
+				if(ibuf[1] == 1) {
+					if (flash_read_cfg(identity_findmy_key, EEP_ID_IFK, sizeof(identity_findmy_key)) == sizeof(identity_findmy_key)) {
+						memcpy(&obuf[2], identity_findmy_key, SIZE_IDENTITY_FINDMY_KEY/2);
+						obuf[1] = 1;
+						olen = SIZE_IDENTITY_FINDMY_KEY/2 + 2;
+					} else { // No findmy key in EEP!
+						obuf[1] = 0xfe;
+						olen = 2;
+					}
+				} else if(ibuf[1] == 2) {
+					if (flash_read_cfg(identity_findmy_key, EEP_ID_IFK, sizeof(identity_findmy_key)) == sizeof(identity_findmy_key)) {
+						memcpy(&obuf[2], &identity_findmy_key[SIZE_IDENTITY_FINDMY_KEY/2], SIZE_IDENTITY_FINDMY_KEY/2);
+						obuf[1] = 2;
+						olen = SIZE_IDENTITY_FINDMY_KEY/2 + 2;
+					} else { // No findmy key in EEP!
+						obuf[1] = 0xfe;
+						olen = 2;
+					}
+				} else {
+					obuf[1] = 0xff;
+					olen = 2;
+				}
+			} else {
+				obuf[1] = 0xff;
+				olen = 2;
+			}
+
 #endif
 #if defined(GPIO_BUZZER) && defined(PWM_CHL_BUZZER)
 		} else if (cmd == CMD_ID_BUZZER) {
 			if(len == 2 && ibuf[1] == 0)
+			{
+				LUCA_LOG("stop2\n");
+
 				pwm_buzzer_stop();
+			}
 			else
 				pwm_buzzer_start();
 			olen = 2;

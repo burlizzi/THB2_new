@@ -2,7 +2,7 @@
 PROJECT_NAME ?= ota_upboot
 #POJECT_DEF ?= -DDEVICE=DEVICE_THB2
 ##############################################################################
-COM_PORT = COM11
+COM_PORT = /dev/ttyUSB0
 ##############################################################################
 # Source
 SRC_PATH = ./source

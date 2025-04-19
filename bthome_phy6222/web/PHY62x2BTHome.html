@@ -590,6 +590,8 @@ div#divChart {
 			INVALID_DEVICENAME_LENGTH: { en: 'Devicename length must be 1 to 19 bytes (UTF-8 characters consume 2 bytes)', ru: 'Имя устройства должно быть от 1 до 19 символов, включая кодирование UTF-8' },
 			INVALID_BINDKEY_LENGTH: { en: 'Bindkey must be 16 bytes, hex encoded (=32 characters)', ru: 'BindKey должен соднержать 16 байт в HEX виде (32 символа)' },
 			INVALID_FINDMYKEY_LENGTH: { en: 'FindMyKey must be 28 bytes, Format Base64', ru: 'BindKey должен содержать 28 байта, формат Base64' },
+			INVALID_GOOGLEKEY_LENGTH: { en: 'FindMyKey must be 28 bytes, Format Base64', ru: 'BindKey должен содержать 28 байта, формат Base64' },
+			INVALID_ROLLINGKEY_LENGTH: { en: 'FindMyKey must be 28 bytes, Format Base64', ru: 'BindKey должен содержать 28 байта, формат Base64' },
 			UPLOAD_FIRMWARE: { en: 'Download firmware file', ru: 'Загрузка firmware файла' },
 			WARNING_BOOT_FW: { en: 'Attention!: Uploading boot FW is not safe. In order to avoid firmware failure use a fresh battery!', ru: 'Внимание!: Обновление  Boot fw не безопасно. Во избежание сбоя прошивки желательно использование полной батареи!' },
 			MEMO_OFF: {en: 'Disabled', ru: 'Отключено'},
@@ -2671,13 +2673,38 @@ window.onload = function() {
  <hr>
  <table>
   <tr>
-	<td style="width:100px;">FindMy Key:</td>
+	<td style="width:100px;">Apple FindMy Key:</td>
 	<td><button type="button" id="btnGetFindMyKey" onclick="getGetFindMyKey()" data-i18ntag="READ">Прочитать</button></td>
 	<td><input size="43" maxlength="50" title="FindMy Key должен содержать 22 байта в hex виде" type="text" id="inpFindMyKey" value="?"></td>
 	<td><button type="button" id="btnSetFindMyKey" onclick="setFindMyKey()" data-i18ntag="WRITE">Записать</button></td>
   </tr>
  </table>
 </div>
+<div id="divGoogleFindMyKey">
+	<hr>
+	<table>
+	 <tr>
+	   <td style="width:100px;">Fixed Google FindMy Key:</td>
+	   <td><button type="button" id="btnGetGoogleFindMyKey" onclick="getGetGoogleKey()" data-i18ntag="READ">Прочитать</button></td>
+	   <td><input size="43" maxlength="50" title="FindMy Key должен содержать 22 байта в hex виде" type="text" id="inpFindMyKey" value="?"></td>
+	   <td><button type="button" id="btnSetGoogleFindMyKey" onclick="setGoogleKey()" data-i18ntag="WRITE">Записать</button></td>
+	 </tr>
+	</table>
+   </div>
+   
+<div>
+	<div id="divGoogleFindMyKey">
+		<hr>
+		<table>
+		 <tr>
+		   <td style="width:100px;">Rolling Google FindMy Key:</td>
+		   <td><button type="button" id="btnGetGoogleFindMyKey" onclick="getGetRollingKey()" data-i18ntag="READ">Прочитать</button></td>
+		   <td><input size="43" maxlength="50" title="FindMy Key должен содержать 22 байта в hex виде" type="text" id="inpFindMyKey" value="?"></td>
+		   <td><button type="button" id="btnSetGoogleFindMyKey" onclick="setRollingKey()" data-i18ntag="WRITE">Записать</button></td>
+		 </tr>
+		</table>
+	</div>
+		   
 <div>
  <hr>
 	<button type="button" id="btnSetMaxMTU" onclick="setMaxMTU()">SetMaxMTU</button>

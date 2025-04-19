@@ -197,7 +197,9 @@ void load_eep_config(void) {
 		}
 #endif
 #if (DEV_SERVICES & SERVICE_FINDMY)
-		flash_read_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key));
+		flash_read_cfg(apple_findmy_key, EEP_ID_FDK, sizeof(apple_findmy_key));
+		flash_read_cfg(google_findmy_key, EEP_ID_GFK, sizeof(google_findmy_key));
+		flash_read_cfg(identity_findmy_key, EEP_ID_IFK, sizeof(identity_findmy_key));
 #endif
 	}
 #if (DEV_SERVICES & SERVICE_HISTORY)

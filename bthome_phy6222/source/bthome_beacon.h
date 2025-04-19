@@ -137,6 +137,8 @@ typedef struct __attribute__((packed)) _adv_bthome_data2_t {
 	uint8_t		c_id;	// = BtHomeID_count32
 	uint32_t	counter;
 #endif
+	uint8		m_id;	// = BtHomeID_motion
+	uint8		motion; 
 } adv_bthome_data2_t, * padv_bthome_data2_t; // size: 5
 
 typedef struct __attribute__((packed)) _adv_bthome_event1_t {
